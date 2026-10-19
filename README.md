@@ -1,117 +1,88 @@
-# [![Upptime](https://raw.githubusercontent.com/upptime/upptime.js.org/master/static/img/logo.svg)](https://upptime.js.org)
+# LetMeDoIt Status
 
-<!--start: description-->
+**Right now:** <!--live status--> **🟩 All systems operational**
 
-**Upptime** (https://upptime.js.org) is the open-source uptime monitor and status page, powered entirely by GitHub Actions, Issues, and Pages, made with 💚 by [Anand Chowdhary](https://anandchowdhary.com).
+**Live page:** https://letmedoit-org.github.io/status/ (will move to https://status.letmedoit.app once DNS is set up, see below)
 
-> I find Upptime an incredible clever usage of \[GitHub Actions]. You essentially get a free configurable uptime monitor for whatever you want. – [CSS Tricks](https://css-tricks.com/upptime/)
+## What this repository is
 
-<details data-embed="anandchowdhary.com" data-title="Upptime" data-summary="Uptime monitor and status page powered by GitHub Actions">
-  <summary>Upptime is used by <strong>3,000+</strong> people and teams to ensure they know when their endpoints go down.</summary>
+This is the public status page and uptime monitor for [LetMeDoIt](https://www.letmedoit.app): the mobile app services, the AI assistant, the web app, the provider dashboard, both websites and media delivery. It is built with [Upptime](https://upptime.js.org), so everything runs on GitHub:
 
-I built Upptime because, like many developers, I needed an uptime monitor and status page for my startup Pabio that was affordable, flexible, and completely under my control. At the time, existing services felt expensive, rigid, or closed-source. GitHub Actions had just launched, and I thought: hmm... what if I turned Actions into a self-hosted uptime monitor?
+- **GitHub Actions** check every service every 5 minutes (`.github/workflows/uptime.yml`).
+- **GitHub Issues** are the incident records. A failed check opens an issue automatically and closes it when the service is back.
+- **GitHub Pages** serves the public page from the `gh-pages` branch.
+- `history/summary.json` is the machine-readable feed that the letmedoit.org `/status` page reads (plan Phase 2).
 
-Upptime runs scheduled checks using GitHub Actions (as often as every 5 minutes) to ping your endpoints and verify they're online. Response time data is recorded and committed to git, enabling long-term trend charts and historical insights. When downtime is detected, GitHub Issues are automatically opened and closed. A status page built with Svelte is hosted via GitHub Pages and shows uptime, response times, and incident history - so you get the full-stack uptime monitor and status page.
+The page is written for our members and the people who support them: plain words, and never colour alone (every line shows a symbol **and** a word: Up, Degraded or Down).
 
-I built it to be completely free if you're already using GitHub since there's no external server or subscription needed. All configuration lives in a single file, and your data is gone if you delete the repo. Plus, you get a git-native audit trail for all changes and events.
+Plan and decisions: `STATUS_PAGE_PLAN.md` in the LetMeDoIt monorepo (parent epic [letmedoit.org#95](https://github.com/LetMeDoit-org/letmedoit.org/issues/95), this phase [#1](https://github.com/LetMeDoit-org/status/issues/1)).
 
-Since launching, Upptime has grown to over 16,000 stars and is actively used by developers and teams to monitor their services. In fact, Upptime is used by [over 3,000+ people and teams](https://github.com/topics/upptime), including Ubuntu-maker Canonical and my preferred developer time tracker Wakatime.
+## What we check
 
-</details>
+| Line on the page | What we ask | Healthy answer |
+| --- | --- | --- |
+| Mobile app services | `https://api.letmedoit.app/health` | 200 |
+| AI assistant | `https://api.letmedoit.app/ping/chroma` (with the `X-Status-Probe` header) | 200 |
+| Web app (web.letmedoit.app) | `https://web.letmedoit.app/` | 200 |
+| Provider dashboard | `https://cms.letmedoit.app/login` | 200 |
+| Website letmedoit.app | `https://www.letmedoit.app/` | 200 |
+| Website letmedoit.org | `https://www.letmedoit.org/` | 200 |
+| Media delivery | `https://files.letmedoit.app/` | 404 with Azure's `ResourceNotFound` body |
 
-<!--end: description-->
+The database and cache probes (`/ping/db`, `/ping/redis`) are deliberately **not** on the public page; Azure availability tests cover them and alert security@ (plan Phase 4). Any answer slower than 5 seconds counts as Degraded.
 
-[![Uptime CI](https://github.com/upptime/upptime/workflows/Uptime%20CI/badge.svg)](https://github.com/upptime/upptime/actions/workflows/uptime.yml)
-[![Response Time CI](https://github.com/upptime/upptime/workflows/Response%20Time%20CI/badge.svg)](https://github.com/upptime/upptime/actions/workflows/response-time.yml?query=workflow%3A%22Response+Time+CI%22)
-[![Graphs CI](https://github.com/upptime/upptime/workflows/Graphs%20CI/badge.svg)](https://github.com/upptime/upptime/actions/workflows/graphs.yml?query=workflow%3A%22Graphs+CI%22)
-[![Static Site CI](https://github.com/upptime/upptime/workflows/Static%20Site%20CI/badge.svg)](https://github.com/upptime/upptime/actions/workflows/site.yml?query=workflow%3A%22Static+Site+CI%22)
-[![Summary CI](https://github.com/upptime/upptime/workflows/Summary%20CI/badge.svg)](https://github.com/upptime/upptime/actions/workflows/summary.yml?query=workflow%3A%22Summary+CI%22)
+### How we check Media delivery
 
-## [📈 Live Status](https://demo.upptime.js.org): <!--live status--> **🟩 All systems operational**
+`files.letmedoit.app` serves member uploads from Azure Blob Storage through Azure Front Door. Every object on that host belongs to a member, so there is no file we can point a public monitor at without exposing it. Instead we request the host root: when DNS, Front Door and the storage account are all healthy, Azure answers `404` with a `ResourceNotFound` body, every time. If any link in that chain breaks, the answer is a 5xx, a Front Door error page, or no answer at all, and the check fails. If we ever add a small, permanent public object (for example `status/probe.txt`), point the check at it and change `expectedStatusCodes` to `[200]`.
+
+## How incidents are posted
+
+Automatic detection opens an issue in this repo. People can also open one by hand:
+
+- **Something is broken now:** open an issue with the **Incident update** template (label `status`). It appears on the page while it is open.
+- **Planned work:** open an issue with the **Planned maintenance** template (label `maintenance`) at least 24 hours ahead.
+
+Who does what (short version of plan §6.1):
+
+| Step | Who | When |
+| --- | --- | --- |
+| Detect | Automatic (Upptime here, Azure availability tests) | continuous |
+| Declare + first public note | Whichever engineer sees it first (Krishna or Aravind). No approval needed; false alarms are simply closed. | within 15 minutes |
+| Updates | Same engineer, or a hand-off noted on the issue | at least every 60 minutes while open |
+| Resolve | Engineer who fixed it closes the issue (automatic ones close themselves) | when checks are green |
+| Post-incident review | One engineer writes, the other approves, as an Incident issue in the affected repo | within 2 business days |
+| Maintenance | One engineer plans, the other acknowledges | at least 24 hours notice |
+
+Public wording rule: short, no jargon, say what the person can do. Example: "Sign-in may fail for a few minutes. Your information is safe. Try again after 10:30 am ET."
+
+## Changing this repo
+
+- `.upptimerc.yml` is the only configuration file. Change it through a pull request; `.github/CODEOWNERS` asks the other code owner for review.
+- The Upptime bot commits generated data directly to `main` (`history/`, `api/`, `graphs/`, the status table below) and publishes the site to `gh-pages`. This repo is therefore excluded from the organisation's default-branch ruleset.
+- **Tokens.** The workflows run on the default `GITHUB_TOKEN`. The enterprise policy fixes its default to read-only, so each workflow carries an explicit `permissions:` block (`contents`, `issues`, and `actions` for Setup CI). Upptime's `update-template` step regenerates the workflows without that block, so **Setup CI, Update Template CI and Updates CI are disabled** in the Actions tab. To update the Upptime template: run Update Template CI once by hand, then re-add the `permissions:` blocks in the same PR. The clean fix is a GitHub App (preferred by Upptime): create one with read/write on Actions, Contents, Issues and Workflows, install it on this repo, set the repository **variable** `GH_APP_ID` (the App's Client ID) and the **secret** `GH_APP_PRIVATE_KEY`, then re-enable the three workflows and drop the `permissions:` blocks.
+- **Secrets.** `STATUS_PROBE_TOKEN` (repository secret, same value as the Key Vault secret `STATUS-PROBE-TOKEN`) is sent as the `X-Status-Probe` header to the AI assistant probe. The API ignores it until lmdi-backend PR #427 ships. Never commit it or print it in a workflow.
+
+## Follow-ups
+
+1. **Custom domain `status.letmedoit.app`.** Owner action in Route 53 (`letmedoit.app` zone): `status.letmedoit.app CNAME letmedoit-org.github.io`. Then, in a PR, replace `baseUrl: /status` with `cname: status.letmedoit.app` in `.upptimerc.yml`, and set the custom domain in Settings → Pages (`gh api -X PUT repos/LetMeDoit-org/status/pages -f cname=status.letmedoit.app -F https_enforced=true` once the certificate is issued). Update the links above and in the plan.
+2. **Email notifications to security@letmedoit.org (SMTP secrets).** Needs Mailgun SMTP credentials as repository secrets: `NOTIFICATION_EMAIL=true`, `NOTIFICATION_EMAIL_FROM`, `NOTIFICATION_EMAIL_TO=security@letmedoit.org`, `NOTIFICATION_EMAIL_SMTP=true`, `NOTIFICATION_EMAIL_SMTP_HOST`, `NOTIFICATION_EMAIL_SMTP_PORT`, `NOTIFICATION_EMAIL_SMTP_USERNAME`, `NOTIFICATION_EMAIL_SMTP_PASSWORD`. Until then, both engineers are assigned to every automatic issue and get GitHub's email for it.
+3. **GitHub App token** instead of the `permissions:` blocks (see "Changing this repo").
+4. **Outage test** (acceptance in #1): temporarily point one site at a URL that answers 500 and confirm an issue opens, then closes.
+
+[![Uptime CI](https://github.com/LetMeDoit-org/status/workflows/Uptime%20CI/badge.svg)](https://github.com/LetMeDoit-org/status/actions/workflows/uptime.yml)
+[![Response Time CI](https://github.com/LetMeDoit-org/status/workflows/Response%20Time%20CI/badge.svg)](https://github.com/LetMeDoit-org/status/actions/workflows/response-time.yml?query=workflow%3A%22Response+Time+CI%22)
+[![Graphs CI](https://github.com/LetMeDoit-org/status/workflows/Graphs%20CI/badge.svg)](https://github.com/LetMeDoit-org/status/actions/workflows/graphs.yml?query=workflow%3A%22Graphs+CI%22)
+[![Static Site CI](https://github.com/LetMeDoit-org/status/workflows/Static%20Site%20CI/badge.svg)](https://github.com/LetMeDoit-org/status/actions/workflows/site.yml?query=workflow%3A%22Static+Site+CI%22)
+[![Summary CI](https://github.com/LetMeDoit-org/status/workflows/Summary%20CI/badge.svg)](https://github.com/LetMeDoit-org/status/actions/workflows/summary.yml?query=workflow%3A%22Summary+CI%22)
+
+## Status table (generated)
 
 <!--start: status pages-->
-<!-- This summary is generated by Upptime (https://github.com/upptime/upptime) -->
-<!-- Do not edit this manually, your changes will be overwritten -->
-<!-- prettier-ignore -->
-| URL | Status | History | Response Time | Uptime |
-| --- | ------ | ------- | ------------- | ------ |
-| <img alt="" src="https://icons.duckduckgo.com/ip3/www.google.com.ico" height="13"> [Google](https://www.google.com) | 🟩 Up | [google.yml](https://github.com/upptime/upptime/commits/HEAD/history/google.yml) | <details><summary><img alt="Response time graph" src="./graphs/google/response-time-week.png" height="20"> 81ms</summary><br><a href="https://demo.upptime.js.org/history/google"><img alt="Response time 122" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fgoogle%2Fresponse-time.json"></a><br><a href="https://demo.upptime.js.org/history/google"><img alt="24-hour response time 76" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fgoogle%2Fresponse-time-day.json"></a><br><a href="https://demo.upptime.js.org/history/google"><img alt="7-day response time 81" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fgoogle%2Fresponse-time-week.json"></a><br><a href="https://demo.upptime.js.org/history/google"><img alt="30-day response time 91" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fgoogle%2Fresponse-time-month.json"></a><br><a href="https://demo.upptime.js.org/history/google"><img alt="1-year response time 114" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fgoogle%2Fresponse-time-year.json"></a></details> | <details><summary><a href="https://demo.upptime.js.org/history/google">100.00%</a></summary><a href="https://demo.upptime.js.org/history/google"><img alt="All-time uptime 99.98%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fgoogle%2Fuptime.json"></a><br><a href="https://demo.upptime.js.org/history/google"><img alt="24-hour uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fgoogle%2Fuptime-day.json"></a><br><a href="https://demo.upptime.js.org/history/google"><img alt="7-day uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fgoogle%2Fuptime-week.json"></a><br><a href="https://demo.upptime.js.org/history/google"><img alt="30-day uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fgoogle%2Fuptime-month.json"></a><br><a href="https://demo.upptime.js.org/history/google"><img alt="1-year uptime 99.93%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fgoogle%2Fuptime-year.json"></a></details>
-| <img alt="" src="https://icons.duckduckgo.com/ip3/en.wikipedia.org.ico" height="13"> [Wikipedia](https://en.wikipedia.org) | 🟩 Up | [wikipedia.yml](https://github.com/upptime/upptime/commits/HEAD/history/wikipedia.yml) | <details><summary><img alt="Response time graph" src="./graphs/wikipedia/response-time-week.png" height="20"> 868ms</summary><br><a href="https://demo.upptime.js.org/history/wikipedia"><img alt="Response time 209" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fwikipedia%2Fresponse-time.json"></a><br><a href="https://demo.upptime.js.org/history/wikipedia"><img alt="24-hour response time 104" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fwikipedia%2Fresponse-time-day.json"></a><br><a href="https://demo.upptime.js.org/history/wikipedia"><img alt="7-day response time 868" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fwikipedia%2Fresponse-time-week.json"></a><br><a href="https://demo.upptime.js.org/history/wikipedia"><img alt="30-day response time 357" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fwikipedia%2Fresponse-time-month.json"></a><br><a href="https://demo.upptime.js.org/history/wikipedia"><img alt="1-year response time 208" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fwikipedia%2Fresponse-time-year.json"></a></details> | <details><summary><a href="https://demo.upptime.js.org/history/wikipedia">100.00%</a></summary><a href="https://demo.upptime.js.org/history/wikipedia"><img alt="All-time uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fwikipedia%2Fuptime.json"></a><br><a href="https://demo.upptime.js.org/history/wikipedia"><img alt="24-hour uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fwikipedia%2Fuptime-day.json"></a><br><a href="https://demo.upptime.js.org/history/wikipedia"><img alt="7-day uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fwikipedia%2Fuptime-week.json"></a><br><a href="https://demo.upptime.js.org/history/wikipedia"><img alt="30-day uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fwikipedia%2Fuptime-month.json"></a><br><a href="https://demo.upptime.js.org/history/wikipedia"><img alt="1-year uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fwikipedia%2Fuptime-year.json"></a></details>
-| <img alt="" src="https://icons.duckduckgo.com/ip3/news.ycombinator.com.ico" height="13"> [Hacker News](https://news.ycombinator.com) | 🟩 Up | [hacker-news.yml](https://github.com/upptime/upptime/commits/HEAD/history/hacker-news.yml) | <details><summary><img alt="Response time graph" src="./graphs/hacker-news/response-time-week.png" height="20"> 178ms</summary><br><a href="https://demo.upptime.js.org/history/hacker-news"><img alt="Response time 285" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fhacker-news%2Fresponse-time.json"></a><br><a href="https://demo.upptime.js.org/history/hacker-news"><img alt="24-hour response time 95" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fhacker-news%2Fresponse-time-day.json"></a><br><a href="https://demo.upptime.js.org/history/hacker-news"><img alt="7-day response time 178" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fhacker-news%2Fresponse-time-week.json"></a><br><a href="https://demo.upptime.js.org/history/hacker-news"><img alt="30-day response time 243" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fhacker-news%2Fresponse-time-month.json"></a><br><a href="https://demo.upptime.js.org/history/hacker-news"><img alt="1-year response time 269" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fhacker-news%2Fresponse-time-year.json"></a></details> | <details><summary><a href="https://demo.upptime.js.org/history/hacker-news">100.00%</a></summary><a href="https://demo.upptime.js.org/history/hacker-news"><img alt="All-time uptime 99.13%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fhacker-news%2Fuptime.json"></a><br><a href="https://demo.upptime.js.org/history/hacker-news"><img alt="24-hour uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fhacker-news%2Fuptime-day.json"></a><br><a href="https://demo.upptime.js.org/history/hacker-news"><img alt="7-day uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fhacker-news%2Fuptime-week.json"></a><br><a href="https://demo.upptime.js.org/history/hacker-news"><img alt="30-day uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fhacker-news%2Fuptime-month.json"></a><br><a href="https://demo.upptime.js.org/history/hacker-news"><img alt="1-year uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fhacker-news%2Fuptime-year.json"></a></details>
-| <img alt="" src="https://icons.duckduckgo.com/ip3/null.ico" height="13"> Secret Site | 🟩 Up | [secret-site.yml](https://github.com/upptime/upptime/commits/HEAD/history/secret-site.yml) | <details><summary><img alt="Response time graph" src="./graphs/secret-site/response-time-week.png" height="20"> 41ms</summary><br><a href="https://demo.upptime.js.org/history/secret-site"><img alt="Response time 45" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fsecret-site%2Fresponse-time.json"></a><br><a href="https://demo.upptime.js.org/history/secret-site"><img alt="24-hour response time 36" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fsecret-site%2Fresponse-time-day.json"></a><br><a href="https://demo.upptime.js.org/history/secret-site"><img alt="7-day response time 41" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fsecret-site%2Fresponse-time-week.json"></a><br><a href="https://demo.upptime.js.org/history/secret-site"><img alt="30-day response time 55" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fsecret-site%2Fresponse-time-month.json"></a><br><a href="https://demo.upptime.js.org/history/secret-site"><img alt="1-year response time 48" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fsecret-site%2Fresponse-time-year.json"></a></details> | <details><summary><a href="https://demo.upptime.js.org/history/secret-site">100.00%</a></summary><a href="https://demo.upptime.js.org/history/secret-site"><img alt="All-time uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fsecret-site%2Fuptime.json"></a><br><a href="https://demo.upptime.js.org/history/secret-site"><img alt="24-hour uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fsecret-site%2Fuptime-day.json"></a><br><a href="https://demo.upptime.js.org/history/secret-site"><img alt="7-day uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fsecret-site%2Fuptime-week.json"></a><br><a href="https://demo.upptime.js.org/history/secret-site"><img alt="30-day uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fsecret-site%2Fuptime-month.json"></a><br><a href="https://demo.upptime.js.org/history/secret-site"><img alt="1-year uptime 100.00%" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fupptime%2Fupptime%2FHEAD%2Fapi%2Fsecret-site%2Fuptime-year.json"></a></details>
-
+<!-- This table is generated by Upptime. Do not edit it by hand. -->
 <!--end: status pages-->
 
-<!--start: docs-->
+## License
 
-## ⭐ How it works
-
-- GitHub Actions is used as an uptime monitor
-  - Every 5 minutes, a workflow visits your website to make sure it's up
-  - Response time is recorded every 6 hours and committed to git
-  - Graphs of response time are generated every day
-- GitHub Issues is used for incident reports
-  - An issue is opened if an endpoint is down
-  - People from your team are assigned to the issue
-  - Incidents reports are posted as issue comments
-  - Issues are locked so non-members cannot comment on them
-  - Issues are closed automatically when your site comes back up
-  - Slack notifications are sent on updates
-- GitHub Pages is used for the status website
-  - A simple, beautiful, and accessible PWA is generated
-  - Built with Svelte and Sapper
-  - Fetches data from this repository using the GitHub API
-
-_Upptime is not affiliated to or endorsed by GitHub._
-
-[![Screenshot of status website](https://raw.githubusercontent.com/upptime/upptime.js.org/master/static/img/screenshot-status.png)](https://upptime.js.org)
-
-## 👩‍💻 [Documentation](https://upptime.js.org)
-
-1. [How it works](https://upptime.js.org/docs)
-1. [Getting started](https://upptime.js.org/docs/get-started)
-1. [Configuration](https://upptime.js.org/docs/configuration)
-1. [Triggers](https://upptime.js.org/docs/triggers)
-1. [Notifications](https://upptime.js.org/docs/notifications)
-1. [Badges](https://upptime.js.org/docs/badges)
-1. [Packages](https://upptime.js.org/docs/packages)
-1. [Contributing](https://upptime.js.org/docs/contributing)
-1. [Frequently Asked Questions](https://upptime.js.org/docs/faq)
-
-### Concepts
-
-#### Issues as incidents
-
-When the GitHub Actions workflow detects that one of your URLs is down, it automatically opens a GitHub issue ([example issue #67](https://github.com/upptime/upptime/issues/67)). You can add incident reports to this issue by adding comments. When your site comes back up, the issue will be closed automatically as well.
-
-<table>
-  <tr>
-    <td>
-      <img alt="Screenshot of GitHub issue" src="https://raw.githubusercontent.com/upptime/upptime.js.org/master/static/img/screenshot-issue.png">
-    </td>
-    <td>
-      <img alt="Screenshot of incident page" src="https://raw.githubusercontent.com/upptime/upptime.js.org/master/static/img/screenshot-incident.png">
-    </td>
-  </tr>
-</table>
-
-#### Commits for response time
-
-Four times per day, another workflow runs and records the response time of your websites. This data is committed to GitHub, so it's available in the commit history of each file ([example commit history](https://github.com/koj-co/upptime/commits/master/history/wikipedia.yml)). Then, the GitHub API is used to graph the response time history of each endpoint and to track when a site went down.
-
-<table>
-  <tr>
-    <td>
-      <img alt="Screenshot of GitHub commits" src="https://raw.githubusercontent.com/upptime/upptime.js.org/master/static/img/screenshot-history.png">
-    </td>
-    <td>
-      <img alt="Screenshot of live status" src="https://raw.githubusercontent.com/upptime/upptime.js.org/master/static/img/screenshot-live-status.png">
-    </td>
-  </tr>
-</table>
-<!--end: docs-->
-
-## 📄 License
-
-- Code: [MIT](./LICENSE) © [Anand Chowdhary](https://anandchowdhary.com)
-- Data in the `./history` directory: [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/)
+- Powered by: [Upptime](https://github.com/upptime/upptime)
+- Code: [MIT](./LICENSE)
+- Data in `./history`: [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/)

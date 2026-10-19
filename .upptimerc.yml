@@ -1,31 +1,119 @@
-# Change these first
-owner: upptime # Your GitHub organization or username, where this repository lives
-repo: upptime # The name of this repository
+# LetMeDoIt public status page - Upptime configuration
+# Docs: https://upptime.js.org/docs/configuration
+# Plan: STATUS_PAGE_PLAN.md in the LetMeDoIt monorepo (Phase 1, issue #1)
+#
+# Change control: edit this file through a pull request reviewed by the other
+# code owner (see .github/CODEOWNERS). The Upptime bot commits only generated
+# data (history/, api/, graphs/, README status table) and the gh-pages site.
 
+owner: LetMeDoit-org
+repo: status
+user-agent: LetMeDoit-org
+
+# Public components, in the order they appear on the page.
+# Names are written for our members and care-takers, not for engineers.
+# Internal probes (/ping/db, /ping/redis) are NOT listed here on purpose:
+# they are covered by Azure availability tests (plan Phase 4).
 sites:
-  - name: Google
-    url: https://www.google.com
-  - name: Wikipedia
-    url: https://en.wikipedia.org
-  - name: Hacker News
-    url: https://news.ycombinator.com
-  - name: Secret Site
-    url: $SECRET_SITE
+  - name: Mobile app services
+    slug: mobile-app-services
+    url: https://api.letmedoit.app/health
+    expectedStatusCodes: [200]
+    maxResponseTime: 5000
+
+  - name: AI assistant
+    slug: ai-assistant
+    url: https://api.letmedoit.app/ping/chroma
+    # The API ignores this header today; it becomes required once
+    # lmdi-backend PR #427 ships. The value lives in the repo secret
+    # STATUS_PROBE_TOKEN (never commit it).
+    headers:
+      - "X-Status-Probe: $STATUS_PROBE_TOKEN"
+    expectedStatusCodes: [200]
+    maxResponseTime: 5000
+
+  - name: Web app (web.letmedoit.app)
+    slug: web-app
+    url: https://web.letmedoit.app/
+    expectedStatusCodes: [200]
+    maxResponseTime: 5000
+
+  - name: Provider dashboard
+    slug: provider-dashboard
+    # "/" answers with a redirect, so we check the sign-in page itself.
+    url: https://cms.letmedoit.app/login
+    expectedStatusCodes: [200]
+    maxResponseTime: 5000
+
+  - name: Website letmedoit.app
+    slug: website-letmedoit-app
+    url: https://www.letmedoit.app/
+    expectedStatusCodes: [200]
+    maxResponseTime: 5000
+
+  - name: Website letmedoit.org
+    slug: website-letmedoit-org
+    url: https://www.letmedoit.org/
+    expectedStatusCodes: [200]
+    maxResponseTime: 5000
+
+  - name: Media delivery
+    slug: media-delivery
+    # files.letmedoit.app serves member uploads from Azure Blob Storage through
+    # Azure Front Door. There is no public "known" object we can point at
+    # without exposing a member's file, so we probe the host root. A healthy
+    # chain (DNS -> Front Door -> storage account) always answers 404 with the
+    # Azure "ResourceNotFound" body; a broken chain answers 5xx, a Front Door
+    # error page, or nothing. See README "How we check Media delivery".
+    url: https://files.letmedoit.app/
+    expectedStatusCodes: [404]
+    __dangerous__body_down_if_text_missing: ResourceNotFound
+    maxResponseTime: 5000
+
+# Who gets assigned (and therefore emailed by GitHub) when a check fails.
+assignees:
+  - krishnakorukanti
+  - aravindbuildstech
+
+# The default GITHUB_TOKEN cannot edit repository settings; these are set by hand.
+skipDescriptionUpdate: true
+skipTopicsUpdate: true
+skipHomepageUpdate: true
 
 status-website:
-  # Add your custom domain name, or remove the `cname` line if you don't have a domain
-  # Uncomment the `baseUrl` line if you don't have a custom domain and add your repo name there
-  cname: demo.upptime.js.org
-  # baseUrl: /your-repo-name
-  logoUrl: https://raw.githubusercontent.com/upptime/upptime.js.org/master/static/img/icon.svg
-  name: Upptime
-  introTitle: "**Upptime** is the open-source uptime monitor and status page, powered entirely by GitHub."
-  introMessage: This is a sample status page which uses **real-time** data from our [GitHub repository](https://github.com/upptime/upptime). No server required — just GitHub Actions, Issues, and Pages. [**Get your own for free**](https://github.com/upptime/upptime)
+  # Custom domain is pending DNS (status.letmedoit.app -> letmedoit-org.github.io).
+  # Once the Route 53 CNAME exists: replace `baseUrl` with
+  # `cname: status.letmedoit.app` and set the custom domain in GitHub Pages.
+  # Until then the page is served at https://letmedoit-org.github.io/status/
+  baseUrl: /status
+  name: LetMeDoIt Status
+  logoUrl: https://www.letmedoit.org/images/logo.svg
+  favicon: https://www.letmedoit.org/favicon.ico
+  theme: light
+  # Brand colour (#270059) applied through the theme's CSS variables.
+  css: |
+    :root {
+      --nav-current-border-bottom-color: #270059;
+      --submit-button-background-color: #270059;
+      --submit-button-border-color: #270059;
+      --error-button-background-color: #270059;
+      --error-button-border-color: #270059;
+    }
+    a { color: #270059; }
+  introTitle: "**Is LetMeDoIt working right now?** This page shows the live status of the LetMeDoIt app, websites and services."
+  introMessage: >-
+    We check every service every 5 minutes. Each line below shows a symbol and a word:
+    **Up** means it is working, **Degraded** means it is slow, and **Down** means it is
+    not working and we are already fixing it. If something shows Down: close the app,
+    wait a few minutes and try again. Your information is safe. Still stuck?
+    Visit our [Help page](https://www.letmedoit.org/help) or
+    [contact us](https://www.letmedoit.org/contact).
   navbar:
     - title: Status
       href: /
-    - title: GitHub
-      href: https://github.com/$OWNER/$REPO
-
-# Upptime also supports notifications, assigning issues, and more
-# See https://upptime.js.org/docs/configuration
+    - title: letmedoit.app
+      href: https://www.letmedoit.app
+    - title: Help
+      href: https://www.letmedoit.org/help
+    - title: Contact
+      href: https://www.letmedoit.org/contact

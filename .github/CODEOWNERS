@@ -1,0 +1,6 @@
+# Human-edited files in this repo need a review from the other code owner
+# (SOC-2 change management). The Upptime bot writes generated data directly:
+# history/, api/, graphs/ and the status table in README.md.
+*                 @krishnakorukanti @aravindbuildstech
+/.upptimerc.yml   @krishnakorukanti @aravindbuildstech
+/.github/         @krishnakorukanti @aravindbuildstech

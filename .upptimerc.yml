@@ -81,11 +81,9 @@ skipTopicsUpdate: true
 skipHomepageUpdate: true
 
 status-website:
-  # Custom domain is pending DNS (status.letmedoit.app -> letmedoit-org.github.io).
-  # Once the Route 53 CNAME exists: replace `baseUrl` with
-  # `cname: status.letmedoit.app` and set the custom domain in GitHub Pages.
-  # Until then the page is served at https://letmedoit-org.github.io/status/
-  baseUrl: /status
+  # Custom domain: Route 53 CNAME status.letmedoit.app -> letmedoit-org.github.io
+  # (created 2026-10-19). GitHub Pages custom domain is set to the same name.
+  cname: status.letmedoit.app
   name: LetMeDoIt Status
   logoUrl: https://www.letmedoit.org/images/logo.svg
   favicon: https://www.letmedoit.org/favicon.ico

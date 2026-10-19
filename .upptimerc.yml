@@ -17,12 +17,14 @@ user-agent: LetMeDoit-org
 sites:
   - name: Mobile app services
     slug: mobile-app-services
+    icon: https://www.letmedoit.org/icon-192.png
     url: https://api.letmedoit.app/health
     expectedStatusCodes: [200]
     maxResponseTime: 5000
 
   - name: AI assistant
     slug: ai-assistant
+    icon: https://www.letmedoit.org/icon-192.png
     url: https://api.letmedoit.app/ping/chroma
     # The API ignores this header today; it becomes required once
     # lmdi-backend PR #427 ships. The value lives in the repo secret
@@ -34,12 +36,14 @@ sites:
 
   - name: Web app (web.letmedoit.app)
     slug: web-app
+    icon: https://www.letmedoit.org/icon-192.png
     url: https://web.letmedoit.app/
     expectedStatusCodes: [200]
     maxResponseTime: 5000
 
   - name: Provider dashboard
     slug: provider-dashboard
+    icon: https://www.letmedoit.org/icon-192.png
     # "/" answers with a redirect, so we check the sign-in page itself.
     url: https://cms.letmedoit.app/login
     expectedStatusCodes: [200]
@@ -47,18 +51,21 @@ sites:
 
   - name: Website letmedoit.app
     slug: website-letmedoit-app
+    icon: https://www.letmedoit.org/icon-192.png
     url: https://www.letmedoit.app/
     expectedStatusCodes: [200]
     maxResponseTime: 5000
 
   - name: Website letmedoit.org
     slug: website-letmedoit-org
+    icon: https://www.letmedoit.org/icon-192.png
     url: https://www.letmedoit.org/
     expectedStatusCodes: [200]
     maxResponseTime: 5000
 
   - name: Media delivery
     slug: media-delivery
+    icon: https://www.letmedoit.org/icon-192.png
     # files.letmedoit.app serves member uploads from Azure Blob Storage through
     # Azure Front Door. There is no public "known" object we can point at
     # without exposing a member's file, so we probe the host root. A healthy
@@ -102,11 +109,13 @@ status-website:
     a { color: #270059; }
   introTitle: "**Is LetMeDoIt working right now?** This page shows the live status of the LetMeDoIt app, websites and services."
   introMessage: >-
-    We check every service every 5 minutes. Each line below shows a symbol and a word:
-    **Up** means it is working, **Degraded** means it is slow, and **Down** means it is
-    not working and we are already fixing it. If something shows Down: close the app,
-    wait a few minutes and try again. Your information is safe. Still stuck?
-    Visit our [Help page](https://www.letmedoit.org/help) or
+    We check every service every 5 minutes. The box below says in words whether
+    everything is working. If a service has a problem, that box changes and an
+    **Active incidents** list appears with a short note from us. **Up** means it is
+    working, **Degraded** means it is slow, and **Down** means it is not working and
+    we are already fixing it. If something is Down: close the app, wait a few
+    minutes and try again. Your information is safe. Still stuck? Visit our
+    [Help page](https://www.letmedoit.org/help) or
     [contact us](https://www.letmedoit.org/contact).
   navbar:
     - title: Status

@@ -56,10 +56,24 @@ sites:
     expectedStatusCodes: [200]
     maxResponseTime: 5000
 
+  - name: Website apex letmedoit.app
+    slug: website-apex-letmedoit-app
+    icon: https://www.letmedoit.org/icon-192.png
+    url: https://letmedoit.app/
+    expectedStatusCodes: [200]
+    maxResponseTime: 5000
+
   - name: Website letmedoit.org
     slug: website-letmedoit-org
     icon: https://www.letmedoit.org/icon-192.png
     url: https://www.letmedoit.org/
+    expectedStatusCodes: [200]
+    maxResponseTime: 5000
+
+  - name: Website apex letmedoit.org
+    slug: website-apex-letmedoit-org
+    icon: https://www.letmedoit.org/icon-192.png
+    url: https://letmedoit.org/
     expectedStatusCodes: [200]
     maxResponseTime: 5000
 

@@ -90,6 +90,24 @@
     "dailyMinutesDown": {}
   },
   {
+    "name": "Website apex letmedoit.app",
+    "url": "https://letmedoit.app/",
+    "icon": "https://www.letmedoit.org/icon-192.png",
+    "slug": "website-apex-letmedoit-app",
+    "status": "up",
+    "uptime": "100.00%",
+    "uptimeDay": "100.00%",
+    "uptimeWeek": "100.00%",
+    "uptimeMonth": "100.00%",
+    "uptimeYear": "100.00%",
+    "time": 124,
+    "timeDay": 124,
+    "timeWeek": 124,
+    "timeMonth": 124,
+    "timeYear": 124,
+    "dailyMinutesDown": {}
+  },
+  {
     "name": "Website letmedoit.org",
     "url": "https://www.letmedoit.org/",
     "icon": "https://www.letmedoit.org/icon-192.png",
@@ -105,6 +123,24 @@
     "timeWeek": 250,
     "timeMonth": 278,
     "timeYear": 278,
+    "dailyMinutesDown": {}
+  },
+  {
+    "name": "Website apex letmedoit.org",
+    "url": "https://letmedoit.org/",
+    "icon": "https://www.letmedoit.org/icon-192.png",
+    "slug": "website-apex-letmedoit-org",
+    "status": "up",
+    "uptime": "100.00%",
+    "uptimeDay": "100.00%",
+    "uptimeWeek": "100.00%",
+    "uptimeMonth": "100.00%",
+    "uptimeYear": "100.00%",
+    "time": 227,
+    "timeDay": 227,
+    "timeWeek": 227,
+    "timeMonth": 227,
+    "timeYear": 227,
     "dailyMinutesDown": {}
   },
   {

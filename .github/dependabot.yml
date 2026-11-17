@@ -1,9 +1,16 @@
+# SOC-2 CC7 — continuous dependency vulnerability monitoring (LetMeDoit-org/.github#38).
 # Upptime's update-template workflow is not used (it would overwrite the signed-commit
 # changes in .github/workflows), so action upgrades, including upptime/uptime-monitor,
 # arrive as pull requests from Dependabot and go through code-owner review.
+# No `labels:` on purpose: Dependabot then applies and creates its default
+# `dependencies` + ecosystem labels, which do not all exist in this repo yet.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"

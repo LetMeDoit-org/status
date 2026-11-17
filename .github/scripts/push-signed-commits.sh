@@ -17,9 +17,9 @@
 # Env:
 #   BASE_SHA  commit the job checked out (set by the "Keep Upptime pushes local" step)
 #   BRANCH    branch to publish to (the workflow's ref name)
-#   GH_TOKEN  installation token of the Upptime GitHub App. When it is empty
-#             (App not set up yet) the commits are pushed unsigned with plain git;
-#             the active ruleset rejects that, so this is only a transition path.
+#   GH_TOKEN  installation token of the Upptime GitHub App. Required: there is no
+#             unsigned fallback, so a missing App fails the job instead of pushing
+#             unsigned commits to the branch.
 set -euo pipefail
 
 : "${BASE_SHA:?BASE_SHA is not set}"
@@ -33,10 +33,8 @@ if [ "$(git rev-parse HEAD)" = "$BASE_SHA" ]; then
 fi
 
 if [ -z "${GH_TOKEN:-}" ]; then
-  echo "::warning::Upptime GitHub App is not configured (vars.GH_APP_ID / secrets.GH_APP_PRIVATE_KEY); pushing unsigned commits with git."
-  git pull --rebase "$FETCH_URL" "$BRANCH"
-  git push "$FETCH_URL" "HEAD:refs/heads/$BRANCH"
-  exit 0
+  echo "::error::Upptime GitHub App token is missing (vars.GH_APP_ID / secrets.GH_APP_PRIVATE_KEY in the upptime environment). Refusing to push unsigned commits."
+  exit 1
 fi
 
 work="$(mktemp -d)"

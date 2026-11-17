@@ -1,0 +1,9 @@
+# Upptime's update-template workflow is not used (it would overwrite the signed-commit
+# changes in .github/workflows), so action upgrades, including upptime/uptime-monitor,
+# arrive as pull requests from Dependabot and go through code-owner review.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -1,6 +1,8 @@
 # Human-edited files in this repo need a review from the other code owner
-# (SOC-2 change management). The Upptime bot writes generated data directly:
-# history/, api/, graphs/ and the status table in README.md.
+# (SOC-2 change management). The Upptime GitHub App commits generated data to
+# main without a pull request (history/, api/, graphs/ and the status table in
+# README.md): it is the only bypass actor of the pull-request ruleset, and its
+# commits are GitHub-signed like everyone else's.
 *                 @krishnakorukanti @aravindbuildstech
 /.upptimerc.yml   @krishnakorukanti @aravindbuildstech
 /.github/         @krishnakorukanti @aravindbuildstech
